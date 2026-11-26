@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOGIN - PDP-11 / HAL 9000</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .terminal {
+            width: 100%;
+            max-width: 760px;
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
+            font-size: 14px;
+            line-height: 1.2;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .terminal-row {
+            display: flex;
+            align-items: center;
+            background-color: #000000;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.2;
+            color: #00ff00;
+        }
+
+        .terminal-row .prefix,
+        .terminal-row .suffix {
+            white-space: pre;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 59ch; 
+            background-color: #000000;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            outline: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Largura exata em 'ch' para alinhar com a grade ASCII (11 chars + 2ch padding = 13ch) */
+        .btn-submit {
+            background-color: #000000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            padding: 2px 1ch;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-submit:hover,
+        .btn-submit:focus {
+            background-color: #00ff00;
+            color: #000000;
+        }
+
+        /* Ocupa 70ch (+ 1 espaço no prefixo = 71ch internos) sem quebrar a borda direita */
+        #msgLogin {
+            width: 70ch;
+            display: inline-block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terminal">
+        <!-- Moldura Superior e Título em ASCII Art -->
+        <pre>
++-----------------------------------------------------------------------+
+| SYSTEM: PDP-11/40 OPERATING SYSTEM: HAL V9000 (2001)                  |
++-----------------------------------------------------------------------+
+|                                                                       |
+| ____________________________________________________________________  |
+|              |  |      /  _  \  /  _  \ |_    _||  \  |  |            |
+|              |  |     |  | |  ||  | |__|  |  |  |   \ |  |            |
+|              |  |     |  | |  ||  | ___   |  |  |    \|  |            |
+|              |  |     |  | |  ||  ||   |  |  |  |  |\    |            |
+|              |  |____ |  |_|  ||  |_|  | _|  |_ |  | \   |            |
+|              |_______| \_____/  \_____/ |______||__|  \__|            |
++-----------------------------------------------------------------------+
+| AUTENTICACAO NECESSARIA. INSIRA SUAS CREDENCIAIS:                     |
+|                                                                       |</pre>
+
+        <!-- Formulário integrado à grade ASCII -->
+        <form id="formLogin">
+            <div class="terminal-row">
+                <label for="loginEmail" class="prefix">| EMAIL.: [</label>
+                <input type="email" id="loginEmail" name="email" required autocomplete="off">
+                <span class="suffix">] |</span>
+            </div>
+
+            <div class="terminal-row">
+                <span class="prefix">|                                                                       |</span>
+            </div>
+
+            <div class="terminal-row">
+                <label for="loginSenha" class="prefix">| SENHA.: [</label>
+                <input type="password" id="loginSenha" name="senha" required autocomplete="off">
+                <span class="suffix">] |</span>
+            </div>
+            
+            <div class="terminal-row">
+                <span class="prefix">|                                                                       |</span>
+            </div>
+
+            <!-- 29 espaços + 13ch do botão + 29 espaços = 71ch exatos -->
+            <div class="terminal-row">
+                <span class="prefix">|                             </span>
+                <button type="submit" id="btnEntrar" class="btn-submit">[ ACESSAR ]</button>
+                <span class="suffix">                             |</span>
+            </div>
+        </form>
+
+        <!-- Moldura Inferior com barra de status integrada -->
+        <pre>
+|                                                                       |
++-----------------------------------------------------------------------+</pre>
+        <div class="terminal-row">
+            <span class="prefix">| </span>
+            <span id="msgLogin">AWAITING LOGIN SECURE CONNECTION...</span>
+            <span class="suffix">|</span>
+        </div>
+        <pre>+-----------------------------------------------------------------------+</pre>
+    </div>
+
+    <script>
+        const formLogin = document.querySelector('#formLogin');
+        const msgLogin = document.querySelector('#msgLogin');
+
+        formLogin.addEventListener('submit', async (evento) => {
+            evento.preventDefault();
+
+            const email = document.querySelector('#loginEmail').value;
+            const senha = document.querySelector('#loginSenha').value;
+
+            msgLogin.style.color = '#00ff00';
+            msgLogin.innerText = 'AUTHENTICATING CREDENTIALS...';
+
+            try {
+                const resposta = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, senha })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    msgLogin.style.color = '#ff3333';
+                    msgLogin.innerText = (dados.erro || 'CREDENCIAIS INVALIDAS.').toUpperCase();
+                    return;
+                }
+
+                localStorage.setItem('usuarioLogado', dados.usuario);
+
+                msgLogin.style.color = '#00ff00';
+                msgLogin.innerText = 'LOGIN REALIZADO! ENTRANDO NO CHAT...';
+
+                setTimeout(() => {
+                    window.location.href = 'chat.html';
+                }, 1000);
+
+            } catch (erro) {
+                msgLogin.style.color = '#ff3333';
+                msgLogin.innerText = 'ERRO AO CONECTAR COM O SERVIDOR!';
+            }
+        });
+    </script>
+
+</body>
+</html>

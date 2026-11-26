@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL PDP-11 / HAL 9000 (2001)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #000000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .terminal {
+            width: 100%;
+            max-width: 760px;
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
+            font-size: 14px;
+            line-height: 1.2;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        .terminal-row {
+            display: flex;
+            align-items: center;
+            background-color: #000000;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.2;
+            color: #00ff00;
+        }
+
+        .terminal-row .prefix,
+        .terminal-row .suffix {
+            white-space: pre;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"] {
+            width: 59ch;
+            background-color: #000000;
+            border: none;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            outline: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .btn-submit {
+            background-color: #000000;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            padding: 2px 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-submit:hover,
+        .btn-submit:focus {
+            background-color: #00ff00;
+            color: #000000;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terminal">
+        <pre>
+  +-------------------------------------------------------------------+
+| SYSTEM: PDP-11/40 OPERATING SYSTEM: HAL V9000 (2001)                  |
+  +-------------------------------------------------------------------+ 
+|                                                                       |
+| ___________________________________________//_______________________  |
+|| ___| / __ \|  _ \  | \  / || | | || |     /\    |  _ \  |_ _| / __ \ |
+|| |_  | |  | | |_) | |  \/  || | | || |    //\\   | |_) |  | | | |  | ||
+||  _| | |  | |  _ /  | \  / || | | || |   //__\\  |  _ /   | | | |  | ||
+|| |   | |__| | | \ \ | |\/| || |_| || |__/ /  \ \ | | \ \  | | | |__| ||
+||_|    \____/|_|  \_\|_|  |_| \___/ |___/_/    \_\|_|  \_\|___| \____/ |
+  +-------------------------------------------------------------------+ 
+| INSIRA OS DADOS SOLICITADOS NOS CAMPOS ABAIXO:                        |
+|                                                                       |</pre>
+
+        <form id="formCadastro">
+            <div class="terminal-row">
+                <label for="cadUsuario">| NOME..: [</label>
+                <input type="text" id="cadUsuario" name="nome" required autocomplete="off">
+                <span class="suffix">] |</span>
+            </div>
+
+            <div class="terminal-row">
+                <span class="prefix">|                                                                       |</span>
+            </div>
+
+            <div class="terminal-row">
+                <label for="cadEmail">| EMAIL.: [</label>
+                <input type="email" id="cadEmail" name="email" required autocomplete="off">
+                <span class="suffix">] |</span>
+            </div>
+
+            <div class="terminal-row">
+                <span class="prefix">|                                                                       |</span>
+            </div>
+
+            <div class="terminal-row">
+                <label for="cadSenha">| SENHA.: [</label>
+                <input type="password" id="cadSenha" name="cadSenha" required autocomplete="off">
+                <span class="suffix">] |</span>
+            </div>
+            
+            <div class="terminal-row">
+                <span class="prefix">|                                                                       |</span>
+            </div>
+
+            <div class="terminal-row">
+                <span class="prefix">|                          </span>
+                <button type="submit" id="btnCadastrar" class="btn-submit">[ ENVIAR DADOS ]</button>
+                <span class="suffix">                          |</span>
+            </div>
+        </form>
+
+        <pre>
+|                                                                       |
+ +---------------------------------------------------------------------+
+| <span id="msgCadastro">COMMAND READY.</span>                                                        |
+ +---------------------------------------------------------------------+</pre>
+    </div>
+
+    <script>
+        const formCadastro = document.querySelector('#formCadastro');
+        const btnCadastrar = document.querySelector('#btnCadastrar');
+        const msgCadastro = document.querySelector('#msgCadastro');
+
+        formCadastro.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Evita o recarregamento da página e mantém a validação HTML
+
+            const inputUsuario = document.querySelector('#cadUsuario');
+            const inputEmail = document.querySelector('#cadEmail');
+            const inputSenha = document.querySelector('#cadSenha');
+
+            const usuario = inputUsuario.value.trim();
+            const email = inputEmail.value.trim();
+            const senha = inputSenha.value;
+
+            btnCadastrar.disabled = true;
+            msgCadastro.style.color = '#00ff00';
+            msgCadastro.innerText = 'PROCESSANDO...';
+
+            try {
+                const resposta = await fetch('/cadastro', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario, email, senha })
+                });
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok) {
+                    msgCadastro.style.color = 'red';
+                    msgCadastro.innerText = dados.erro;
+                    return;
+                }
+
+                msgCadastro.style.color = '#00ff00';
+                msgCadastro.innerText = dados.mensagem;
+
+                formCadastro.reset(); // Limpa todos os inputs do formulário
+                window.location.href='login.html'
+
+            } catch (erro) {
+                msgCadastro.style.color = 'red';
+                msgCadastro.innerText = 'Erro ao conectar com o servidor!';
+            } finally {
+                btnCadastrar.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
